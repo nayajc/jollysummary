@@ -1,0 +1,116 @@
+{
+  "project": "Meeting Summary Web App",
+  "version": "1.0.0",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Next.js project scaffold with Firebase & Tailwind",
+      "passes": true,
+      "acceptanceCriteria": [
+        "Next.js 14 project exists at /Users/jcsong/codework/MeetingSummary with App Router",
+        "package.json includes firebase, openai, tailwindcss dependencies",
+        "tailwind.config.ts and postcss.config.js exist",
+        "src/lib/firebase.ts exports initialized Firebase app, auth, firestore, storage",
+        "src/types/meeting.ts defines Meeting, ActionPoint, STTProviderName types",
+        "TypeScript compiles with no errors (npx tsc --noEmit)"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Firebase Auth — login/logout with Google",
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/lib/auth.ts exports signInWithGoogle and signOut helpers",
+        "src/contexts/AuthContext.tsx provides user state via React context",
+        "src/app/login/page.tsx renders a Google sign-in button",
+        "src/middleware.ts redirects unauthenticated users to /login",
+        "Firestore security rules file (firestore.rules) exists with user-scoped read/write"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "STT pluggable adapter + Whisper implementation",
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/lib/stt/types.ts defines STTProvider interface with transcribe(file: File): Promise<string>",
+        "src/lib/stt/whisper.ts implements WhisperProvider using OpenAI Whisper API (model: whisper-1)",
+        "src/lib/stt/index.ts exports getSTTProvider(name: STTProviderName) factory function",
+        "src/app/api/transcribe/route.ts accepts multipart/form-data with audio file and provider param, returns {transcript: string}",
+        "API route handles mp3/mp4/wav/m4a file types"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "AI Processing — GPT-4o summary + action points extraction",
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/app/api/process/route.ts accepts {transcript: string} and returns {summary: string, actionPoints: ActionPoint[]}",
+        "GPT-4o prompt instructs: summary in Korean prose paragraphs followed by bullet points",
+        "GPT-4o returns structured action points with assignee, task, dueDate (optional), priority (high/medium/low) fields",
+        "Response is parsed and validated before returning to client",
+        "API uses gpt-4o model with response_format JSON mode or structured output"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Meeting creation UI — text input or audio upload",
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/app/meetings/new/page.tsx renders two input modes: text paste tab and audio upload tab",
+        "Text mode: textarea for pasting meeting transcript",
+        "Audio mode: file input accepting .mp3/.mp4/.wav/.m4a with STT provider dropdown selector",
+        "STT provider dropdown shows at least: Whisper (default) option",
+        "Submit triggers transcription (audio mode) then AI processing, shows loading state",
+        "On success, saves meeting to Firestore under users/{uid}/meetings/{id} and redirects to meeting detail"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Meeting detail page — view, inline-edit summary and action points",
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/app/meetings/[id]/page.tsx fetches meeting from Firestore and displays title, transcript, summary, action points",
+        "Summary section has an Edit button that switches to a textarea for inline editing; Save persists to Firestore",
+        "Action points section shows cards with all 4 fields (assignee, task, dueDate, priority)",
+        "Each action point card has Edit and Delete buttons",
+        "Add New Action Point button opens inline form with all 4 fields",
+        "All edits persist to Firestore immediately on save"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Meeting list page — chronological meeting history",
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/app/meetings/page.tsx fetches and displays all meetings for the authenticated user",
+        "Meetings are sorted by createdAt descending (newest first)",
+        "Each meeting card shows: title, createdAt date, number of action points",
+        "Clicking a meeting card navigates to /meetings/[id]",
+        "Empty state shown when no meetings exist",
+        "New Meeting button links to /meetings/new"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Firebase Storage for audio files",
+      "passes": true,
+      "acceptanceCriteria": [
+        "Audio files are uploaded to Firebase Storage at path users/{uid}/audio/{meetingId}.{ext} before STT processing",
+        "Meeting document in Firestore stores audioStoragePath field pointing to the storage path",
+        "Meeting detail page shows a link or audio player if audioStoragePath exists"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Environment config & deployment readiness",
+      "passes": true,
+      "acceptanceCriteria": [
+        ".env.local.example documents all required env vars: NEXT_PUBLIC_FIREBASE_*, OPENAI_API_KEY",
+        "next.config.ts exists and is valid",
+        "vercel.json or README documents deployment steps",
+        "npm run build completes without errors",
+        "No hardcoded API keys in source files"
+      ]
+    }
+  ]
+}

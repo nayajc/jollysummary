@@ -1,27 +1,27 @@
-import { initializeApp, getApps, cert, type App } from 'firebase-admin/app'
-import { getAuth } from 'firebase-admin/auth'
 import { NextRequest } from 'next/server'
 
-function getAdminApp(): App {
-  if (getApps().length) return getApps()[0]!
-  return initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_ADMIN_PROJECT_ID ?? process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  })
-}
-
+// Verify Firebase ID token using the Firebase Auth REST API
+// (avoids firebase-admin SDK ESM/CJS incompatibility on Vercel)
 export async function verifyIdToken(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
 
   const idToken = authHeader.slice(7)
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+  if (!apiKey) return null
+
   try {
-    const app = getAdminApp()
-    const decoded = await getAuth(app).verifyIdToken(idToken)
-    return decoded.uid
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      }
+    )
+    if (!res.ok) return null
+    const data = await res.json() as { users?: { localId: string }[] }
+    return data.users?.[0]?.localId ?? null
   } catch (err) {
     console.error('verifyIdToken error:', err)
     return null
