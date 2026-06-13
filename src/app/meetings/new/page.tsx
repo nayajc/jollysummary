@@ -129,11 +129,13 @@ export default function NewMeetingPage() {
           headers: authHeader,
           body: formData,
         })
+        const resText = await res.text()
         if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error ?? 'Transcription failed')
+          let errMsg = 'Transcription failed'
+          try { errMsg = JSON.parse(resText).error ?? errMsg } catch {}
+          throw new Error(errMsg)
         }
-        const data = await res.json()
+        const data = JSON.parse(resText)
         transcript = data.transcript
       }
 
@@ -149,11 +151,13 @@ export default function NewMeetingPage() {
         headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify({ transcript }),
       })
+      const processText = await processRes.text()
       if (!processRes.ok) {
-        const err = await processRes.json()
-        throw new Error(err.error ?? 'Processing failed')
+        let errMsg = 'Processing failed'
+        try { errMsg = JSON.parse(processText).error ?? errMsg } catch {}
+        throw new Error(errMsg)
       }
-      const { summary, actionPoints } = await processRes.json()
+      const { summary, actionPoints } = JSON.parse(processText)
 
       setStatus('saving')
       const finalTitle = title.trim() || `미팅 ${new Date().toLocaleDateString('ko-KR')}`

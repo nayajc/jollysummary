@@ -24,13 +24,14 @@ interface ProcessResponse {
 }
 
 export async function POST(req: NextRequest) {
-  const uid = await verifyIdToken(req)
-  if (!uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   try {
+    const uid = await verifyIdToken(req)
+    if (!uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
     const { transcript } = await req.json() as { transcript: string }
 
     if (!transcript || transcript.trim().length === 0) {
@@ -61,6 +62,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ summary: parsed.summary ?? '', actionPoints })
   } catch (err) {
     console.error('Processing error:', err)
-    return NextResponse.json({ error: 'AI processing failed' }, { status: 500 })
+    return NextResponse.json({ error: 'AI processing failed', detail: String(err) }, { status: 500 })
   }
 }

@@ -19,9 +19,11 @@ export async function verifyIdToken(req: NextRequest): Promise<string | null> {
 
   const idToken = authHeader.slice(7)
   try {
-    const decoded = await getAuth(getAdminApp()).verifyIdToken(idToken)
+    const app = getAdminApp()
+    const decoded = await getAuth(app).verifyIdToken(idToken)
     return decoded.uid
-  } catch {
+  } catch (err) {
+    console.error('verifyIdToken error:', err)
     return null
   }
 }
