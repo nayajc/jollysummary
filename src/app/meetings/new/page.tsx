@@ -131,8 +131,11 @@ export default function NewMeetingPage() {
         })
         const resText = await res.text()
         if (!res.ok) {
-          let errMsg = 'Transcription failed'
-          try { errMsg = JSON.parse(resText).error ?? errMsg } catch {}
+          let errMsg = `Transcription failed (${res.status})`
+          try {
+            const j = JSON.parse(resText)
+            errMsg = j.detail ? `${j.error}: ${j.detail}` : (j.error ?? errMsg)
+          } catch {}
           throw new Error(errMsg)
         }
         const data = JSON.parse(resText)
